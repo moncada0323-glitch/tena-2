@@ -4,15 +4,12 @@ import { connectDB } from "@/lib/db";
 export async function GET() {
   try {
     const db = await connectDB();
-
-    // Devolvemos también la contraseña como "contraseña" para el front
     const [rows] = await db.execute(
       "SELECT no_empleado, contrasena AS contraseña FROM usuarios"
     );
-
     return NextResponse.json(rows);
   } catch (err) {
-    console.error(err);
+    console.error("Error al obtener usuarios:", err);
     return NextResponse.json(
       { ok: false, message: "Error al obtener usuarios" },
       { status: 500 }
@@ -53,7 +50,7 @@ export async function POST(req) {
 
     return NextResponse.json({ ok: true, message: "Usuario creado" });
   } catch (err) {
-    console.error(err);
+    console.error("Error al crear usuario:", err);
     return NextResponse.json(
       { ok: false, message: "Error al crear usuario" },
       { status: 500 }

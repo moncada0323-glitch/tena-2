@@ -3,35 +3,25 @@ import { connectDB } from "@/lib/db";
 
 export async function POST(req) {
   try {
-    const { username, password } = await req.json();
+    const { no_empleado, contrasena } = await req.json();
 
-    // Validaciones básicas
-    if (!username || !password) {
+    // 1. Validaciones básicas
+    if (!no_empleado || !contrasena) {
       return NextResponse.json(
-        { success: false, message: "Usuario y contraseña son obligatorios" },
+        {
+          success: false,
+          message: "No. empleado y contraseña son obligatorios",
+        },
         { status: 400 }
       );
     }
 
     const db = await connectDB();
 
-    // Aquí asumo que 'username' es el no_empleado
+    // 2. Buscar en usuarios
     const [rows] = await db.execute(
-      `
-      SELECT 
-        u.no_empleado,
-        u.contrasena,
-        e.nombre,
-        e.apellido,
-        p.nombre_puesto AS puesto,
-        a.nombre_area AS area
-      FROM usuarios u
-      INNER JOIN empleados e ON e.no_empleado = u.no_empleado
-      LEFT JOIN puestos p ON e.puesto = p.id_puesto
-      LEFT JOIN areas a ON e.area = a.id_area
-      WHERE u.no_empleado = ?
-      `,
-      [username]
+      "SELECT no_empleado, contrasena FROM usuarios WHERE no_empleado = ?",
+      [no_empleado]
     );
 
     if (rows.length === 0) {
@@ -43,27 +33,48 @@ export async function POST(req) {
 
     const user = rows[0];
 
-    // Comparación directa de contraseña (en real → usar hash)
-    if (user.contrasena !== password) {
+    // 3. Comparar contraseña (en producción sería con hash)
+    if (user.contrasena !== contrasena) {
       return NextResponse.json(
         { success: false, message: "Contraseña incorrecta" },
         { status: 401 }
       );
     }
 
-    // Armamos objeto limpio sin la contraseña
-    const userSafe = {
-      no_empleado: user.no_empleado,
-      nombre: user.nombre,
-      apellido: user.apellido,
-      puesto: user.puesto,
-      area: user.area,
-    };
+    // 4. Traer info del empleado (opcional, pero nice)
+    const [empleados] = await db.execute(
+      `SELECT 
+         e.no_empleado,
+         e.nombre,
+         e.apellido,
+         p.nombre_puesto AS puesto,
+         a.nombre_area AS area
+       FROM empleados e
+       LEFT JOIN puestos p ON e.puesto = p.id_puesto
+       LEFT JOIN areas a ON e.area = a.id_area
+       WHERE e.no_empleado = ?`,
+      [no_empleado]
+    );
 
+    let empleadoInfo;
+
+    if (empleados.length > 0) {
+      empleadoInfo = empleados[0];
+    } else {
+      empleadoInfo = {
+        no_empleado: user.no_empleado,
+        nombre: "Sin nombre",
+        apellido: "",
+        puesto: null,
+        area: null,
+      };
+    }
+
+    // 5. Respuesta OK
     return NextResponse.json({
       success: true,
       message: "Login exitoso",
-      user: userSafe,
+      user: empleadoInfo,
     });
   } catch (err) {
     console.error("Error en login:", err);

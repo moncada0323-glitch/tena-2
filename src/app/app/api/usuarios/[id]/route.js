@@ -4,7 +4,7 @@ import { connectDB } from "@/lib/db";
 export async function GET(req, { params }) {
   try {
     const db = await connectDB();
-    const { id } = params; // carpeta [id] => params.id
+    const { id } = params; // viene de la carpeta [id]
 
     const [rows] = await db.execute(
       "SELECT no_empleado, contrasena AS contraseña FROM usuarios WHERE no_empleado = ?",
@@ -20,7 +20,7 @@ export async function GET(req, { params }) {
 
     return NextResponse.json(rows[0]);
   } catch (err) {
-    console.error(err);
+    console.error("Error al obtener usuario:", err);
     return NextResponse.json(
       { ok: false, message: "Error al obtener usuario" },
       { status: 500 }
@@ -31,8 +31,7 @@ export async function GET(req, { params }) {
 export async function PUT(req, { params }) {
   try {
     const db = await connectDB();
-    const { id } = params; // aquí también
-
+    const { id } = params;
     const { contraseña } = await req.json();
 
     if (!contraseña) {
@@ -52,7 +51,7 @@ export async function PUT(req, { params }) {
       message: "Contraseña actualizada",
     });
   } catch (err) {
-    console.error(err);
+    console.error("Error al actualizar usuario:", err);
     return NextResponse.json(
       { ok: false, message: "Error al actualizar usuario" },
       { status: 500 }
@@ -72,7 +71,7 @@ export async function DELETE(req, { params }) {
       message: "Usuario eliminado",
     });
   } catch (err) {
-    console.error(err);
+    console.error("Error al eliminar usuario:", err);
     return NextResponse.json(
       { ok: false, message: "Error al eliminar usuario" },
       { status: 500 }
