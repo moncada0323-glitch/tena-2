@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "localforage": "^1.10.0",
     "mysql2": "^3.15.3",
     "next": "16.0.2",
     "next-pwa": "^5.6.0",

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import ModalEditarUsuario from "./modal/ModalEditarUsuario";
+import ModalEditarUsuario from "./modals/ModalEditarUsuario";
 
 export default function Usuarios() {
   const [usuarios, setUsuarios] = useState([]);

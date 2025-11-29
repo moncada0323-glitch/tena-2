@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import localforage from "localforage";
 
 import Vempleados from "./components/empleados/empleados";
 import Ventradas from "./components/entradas/entradas";
@@ -24,13 +23,24 @@ export default function CEODashboard() {
   const [menuAbierto, setMenuAbierto] = useState(false);
   const router = useRouter();
 
-  // USEEFFECT CORRECTO
   useEffect(() => {
-    const loadEmpleado = async () => {
-      const emp = await localforage.getItem("empleado");
-      if (!emp) return router.push("/");
+    const loadEmpleado = () => {
+      // Leer el empleado desde sessionStorage
+      const stored = sessionStorage.getItem("empleado");
 
-      setEmpleado(emp);
+      if (!stored) {
+        // Si no hay nada guardado, regresamos al login
+        router.push("/");
+        return;
+      }
+
+      try {
+        const emp = JSON.parse(stored);
+        setEmpleado(emp);
+      } catch (e) {
+        console.error("Error parseando empleado de sessionStorage:", e);
+        router.push("/");
+      }
     };
 
     loadEmpleado();
@@ -46,7 +56,6 @@ export default function CEODashboard() {
 
   return (
     <div className="flex h-screen bg-gray-100 overflow-hidden">
-
       {/* Botón móvil */}
       <button
         className="md:hidden absolute top-4 left-4 bg-blue-600 text-white px-3 py-2 rounded shadow-lg z-50"
@@ -65,11 +74,12 @@ export default function CEODashboard() {
           <p className="text-gray-700 font-medium">
             {empleado.nombre} {empleado.apellido}
           </p>
-          <p className="text-sm text-gray-500">{empleado.nombre_puesto}</p>
+          <p className="text-sm text-gray-500">
+            {empleado.puesto || empleado.nombre_puesto}
+          </p>
         </div>
 
         <div className="flex flex-col space-y-3">
-
           {[
             "Empleados",
             "Entradas",
@@ -99,13 +109,12 @@ export default function CEODashboard() {
               {item.replace("_", " ")}
             </button>
           ))}
-
         </div>
 
         {/* CERRAR SESIÓN */}
         <button
-          onClick={async () => {
-            await localforage.removeItem("empleado");
+          onClick={() => {
+            sessionStorage.removeItem("empleado");
             document.cookie =
               "sesion_usuario=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
             router.push("/");
@@ -118,7 +127,6 @@ export default function CEODashboard() {
 
       {/* CONTENIDO */}
       <main className="flex-1 p-8 overflow-y-auto md:ml-0 mt-12 md:mt-0">
-
         {seccion === "Empleados" && <Vempleados empleado={empleado} />}
         {seccion === "Entradas" && <Ventradas />}
         {seccion === "Salidas" && <Vsalidas />}
@@ -131,7 +139,6 @@ export default function CEODashboard() {
         {seccion === "Tipo_producto" && <Vtipo_producto />}
         {seccion === "Turno" && <Vturno />}
         {seccion === "Usuarios" && <Vusuarios />}
-
       </main>
     </div>
   );
