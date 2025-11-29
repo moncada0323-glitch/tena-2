@@ -1,58 +1,29 @@
+// src/app/api/login/route.js
 import { NextResponse } from "next/server";
 
-// --- Base de datos simulada temporal (reemplázala por tu DB real) ---
 const usuarios = [
-  {
-    id: 1,
-    usuario: "1",
-    password: "12345678",
-    nombre: "Usuario Administrador",
-    area: "Almacen",
-    puesto: "Supervisor",
-  },
+  { id: 1, usuario: "1", password: "12345678", nombre: "Nataly Pacheco", area: "CEO", puesto: "CEO" }
 ];
 
-export async function POST(req) {
+export async function POST(request) {
   try {
-    const { usuario, password } = await req.json();
+    const body = await request.json();
+    const { usuario, password } = body ?? {};
 
     if (!usuario || !password) {
-      return NextResponse.json(
-        { ok: false, error: "Faltan datos" },
-        { status: 400 }
-      );
+      return NextResponse.json({ ok: false, error: "Faltan datos" }, { status: 400 });
     }
 
-    // Busca al usuario (puede ser reemplazado por SQL luego)
-    const user = usuarios.find(
-      (u) => u.usuario === usuario && u.password === password
-    );
-
+    const user = usuarios.find(u => u.usuario === String(usuario) && u.password === String(password));
     if (!user) {
-      return NextResponse.json(
-        { ok: false, error: "Usuario o contraseña incorrectos" },
-        { status: 401 }
-      );
+      return NextResponse.json({ ok: false, error: "Usuario o contraseña incorrectos" }, { status: 401 });
     }
 
-    // ★ ÉXITO ★
-    return NextResponse.json(
-      {
-        ok: true,
-        usuario: {
-          id: user.id,
-          nombre: user.nombre,
-          area: user.area,
-          puesto: user.puesto,
-        },
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error("Error en /api/login:", error);
-    return NextResponse.json(
-      { ok: false, error: "Error en el servidor" },
-      { status: 500 }
-    );
+    // Respuesta de ejemplo (quita password antes de devolver)
+    const { password: _, ...userSafe } = user;
+    return NextResponse.json({ ok: true, user: userSafe }, { status: 200 });
+  } catch (err) {
+    console.error("Error en /api/login:", err);
+    return NextResponse.json({ ok: false, error: "Error en el servidor" }, { status: 500 });
   }
 }
